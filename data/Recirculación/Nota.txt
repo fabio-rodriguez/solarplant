@@ -1,0 +1,11 @@
+Los datos generados se han organizado en columnas, cada  0.25 segundos:
+DATA= [tiempo Irradi T_amb Caudal Tentrada Tsal  Tf_out_tube1  Tf_out_tube2];
+
+tiempo 			%% Hora decimal
+Irradi  		%% Radiación solar  W/m2
+T_amb 			%% Temperatura ambiente empelada
+Caudal 			%% Caudal m3/h
+Tentrada		%% Temperatura de entrada al colector
+Tsal			%% Temperatura de salida del captador
+Tf_out_tube1		%% Temperatura del fluido a la salida de la primera tubería 
+Tf_out_tube2 		%% Temperatura del fluido a la salida de la segunda tubería. Además,es la que se retroalimenta al colector
