@@ -22,6 +22,8 @@ if __name__ == "__main__":
 
     G1_negative_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+neg_offset_path))
     
-    print(G1_good)
-    print(G1_positive_offset)
-    print(G1_negative_offset)
+    sd_classify(G1_good["DATA_G1"], G1_positive_offset["DATA_G1_fallo2"])
+
+    sd_classify(G1_good["DATA_G1"], G1_negative_offset["DATA_G1_fallo1"])
+
+    
