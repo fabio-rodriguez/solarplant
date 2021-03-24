@@ -4,7 +4,7 @@ import scipy.io
 import sys
 
 from aux_functions import split_data 
-from classification import sd_classify
+from classification import sd_classify, basic_nn_classify
 
 
 def read_data():
@@ -47,6 +47,10 @@ def read_data():
     G2_negative_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+neg_offset_path))
 
     return G1_AS_good, G1_AS_positive_offset, G1_AS_negative_offset, G1_DES_good, G1_DES_positive_offset, G1_DES_negative_offset, G2_good, G2_positive_offset, G2_negative_offset 
+
+
+def delete_columns(array, indexes):
+    return np.delete(array, indexes, 1)
 
 
 def test1(g1as_good, g1as_pos, g1as_neg, g1des_good, g1des_pos, g1des_neg, g2_good, g2_pos, g2_neg):
@@ -118,8 +122,8 @@ def merge_data(g1as_good, g1as_pos, g1as_neg, g1des_good, g1des_pos, g1des_neg, 
 if __name__ == "__main__":
 
     G1_AS_good, G1_AS_positive_offset, G1_AS_negative_offset, G1_DES_good, G1_DES_positive_offset, G1_DES_negative_offset, G2_good, G2_positive_offset, G2_negative_offset = read_data()
-
-    TEST_DATA = [
+    
+    data_list = [
         G1_AS_good[list(G1_AS_good.keys())[-1]], 
         G1_AS_positive_offset[list(G1_AS_positive_offset.keys())[-1]], 
         G1_AS_negative_offset[list(G1_AS_negative_offset.keys())[-1]], 
@@ -131,6 +135,8 @@ if __name__ == "__main__":
         G2_negative_offset[list(G2_negative_offset.keys())[-1]]
     ]
 
+    TEST_DATA = [delete_columns(data, [0,6,7]) for data in data_list]
+
     ## Mean and SD classification 
     #test1(*TEST_DATA)
 
@@ -139,4 +145,5 @@ if __name__ == "__main__":
     X, y = merge_data(*TEST_DATA)
     X_train, y_train, X_test, y_test = split_data(X, y, random_=2**10)
 
+    basic_nn_classify(X_train, y_train, X_test, y_test)
 
