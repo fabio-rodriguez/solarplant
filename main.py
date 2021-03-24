@@ -1,11 +1,13 @@
+import numpy as np
 import os
 import scipy.io
 import sys
 
+from aux_functions import split_data 
 from classification import sd_classify
 
 
-if __name__ == "__main__":
+def read_data():
 
     dirname = os.path.dirname(__file__)
     
@@ -13,17 +15,128 @@ if __name__ == "__main__":
     
     relative_path = 'data/Recirculación/Grupo_1_170809/Caudal_ascendente/'
     no_fail_path = 'Datos_sin_fallo/G1_sin_fallos.mat'
-    neg_offset_path = '1_Offset positivo en caudal/G1_con_fallos.mat'
-    pos_offset_path = '2_Offset negativo en caudal/G1_con_fallo2.mat'
+    pos_offset_path = '1_Offset positivo en caudal/G1_con_fallos.mat'
+    neg_offset_path = '2_Offset negativo en caudal/G1_con_fallo2.mat'
 
-    G1_good = scipy.io.loadmat(os.path.join(dirname, relative_path+no_fail_path))
-
-    G1_positive_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+pos_offset_path))
-
-    G1_negative_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+neg_offset_path))
+    G1_AS_good = scipy.io.loadmat(os.path.join(dirname, relative_path+no_fail_path))
+    G1_AS_positive_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+pos_offset_path))
+    G1_AS_negative_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+neg_offset_path))
     
-    sd_classify(G1_good["DATA_G1"], G1_positive_offset["DATA_G1_fallo2"])
 
-    sd_classify(G1_good["DATA_G1"], G1_negative_offset["DATA_G1_fallo1"])
-
+    # Grupo 1, Caudal descendente
     
+    relative_path = 'data/Recirculación/Grupo_1_170809/Caudal_descendente/'
+    no_fail_path = 'Datos sin fallo/G1_sin_fallos_dcr.mat'
+    pos_offset_path = '1_Offset positivo en caudal/G1_con_fallo1_dcr.mat'
+    neg_offset_path = '2_Offset negativo en caudal/G1_con_fallo2_dcr.mat'
+
+    G1_DES_good = scipy.io.loadmat(os.path.join(dirname, relative_path+no_fail_path))
+    G1_DES_positive_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+pos_offset_path))
+    G1_DES_negative_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+neg_offset_path))
+    
+    
+    # Grupo 2, Caudal ascendente
+    
+    relative_path = 'data/Recirculación/Grupo_2_290609/'
+    no_fail_path = 'Datos sin fallo/G2_sin_fallos.mat'
+    pos_offset_path = '1_Offset positivo/G2_offset_positivo.mat'
+    neg_offset_path = '2_Offset negativo/G2_offset_negativo.mat'
+
+    G2_good = scipy.io.loadmat(os.path.join(dirname, relative_path+no_fail_path))
+    G2_positive_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+pos_offset_path))
+    G2_negative_offset = scipy.io.loadmat(os.path.join(dirname, relative_path+neg_offset_path))
+
+    return G1_AS_good, G1_AS_positive_offset, G1_AS_negative_offset, G1_DES_good, G1_DES_positive_offset, G1_DES_negative_offset, G2_good, G2_positive_offset, G2_negative_offset 
+
+
+def test1(g1as_good, g1as_pos, g1as_neg, g1des_good, g1des_pos, g1des_neg, g2_good, g2_pos, g2_neg):
+
+    print("Grupo 1 Caudal Ascendente (Offset Positivo)")
+    sd_classify(g1as_good, g1as_pos)
+    print("*************************")
+    print()
+    
+    print("Grupo 1 Caudal Ascendente (Offset Negativo)")
+    sd_classify(g1as_good, g1as_neg)
+    print("*************************")
+    print()
+    
+    print("Grupo 1 Caudal Descendente (Offset Positivo)")
+    sd_classify(g1des_good, g1des_pos)
+    print("*************************")
+    print()
+ 
+    print("Grupo 1 Caudal Descendente (Offset Negativo)")
+    sd_classify(g1des_good, g1des_neg)
+    print("*************************")
+    print()
+ 
+    print("Grupo 2 (Offset Positivo)")
+    sd_classify(g2_good, g2_pos)
+    print("*************************")
+    print()
+ 
+    print("Grupo 2 (Offset Negativo)")
+    sd_classify(g2_good, g2_neg)
+    print("*************************")
+    print()
+
+    print("Grupo 1 Caudal Ascendente (Offset Positivo y Negativo)")
+    sd_classify(g1as_good, np.concatenate((g1as_pos, g1as_neg), axis=0))
+    print("*************************")
+    print()
+    
+    print("Grupo 1 Caudal Descendente (Offset Positivo y Negativo)")
+    sd_classify(g1des_good, np.concatenate((g1des_pos, g1des_neg), axis=0))
+    print("*************************")
+    print()
+    
+
+    print("Grupo 2 (Offset Positivo y Negativo)")
+    sd_classify(g2_good, np.concatenate((g2_pos, g2_neg), axis=0))
+    print("*************************")
+    print()
+    
+    print("TODOS")
+    sd_classify(np.concatenate((g1as_good, g1des_good, g2_good), axis=0), 
+                np.concatenate((g1as_pos, g1as_neg, g1des_pos, g1des_neg, g2_pos, g2_neg), axis=0))
+    print("*************************")
+    print()
+
+
+def merge_data(g1as_good, g1as_pos, g1as_neg, g1des_good, g1des_pos, g1des_neg, g2_good, g2_pos, g2_neg):
+    
+    X_good = np.concatenate((g1as_good, g1des_good, g2_good), axis=0)
+    X_fail = np.concatenate((g1as_pos, g1as_neg, g1des_pos, g1des_neg, g2_pos, g2_neg), axis=0)
+    
+    y_good = np.ones(X_good.shape[0])
+    y_fail = np.zeros(X_fail.shape[0])
+
+    return np.concatenate((X_good, X_fail), axis=0), np.concatenate((y_good, y_fail), axis=0)
+
+
+if __name__ == "__main__":
+
+    G1_AS_good, G1_AS_positive_offset, G1_AS_negative_offset, G1_DES_good, G1_DES_positive_offset, G1_DES_negative_offset, G2_good, G2_positive_offset, G2_negative_offset = read_data()
+
+    TEST_DATA = [
+        G1_AS_good[list(G1_AS_good.keys())[-1]], 
+        G1_AS_positive_offset[list(G1_AS_positive_offset.keys())[-1]], 
+        G1_AS_negative_offset[list(G1_AS_negative_offset.keys())[-1]], 
+        G1_DES_good[list(G1_DES_good.keys())[-1]], 
+        G1_DES_positive_offset[list(G1_DES_positive_offset.keys())[-1]], 
+        G1_DES_negative_offset[list(G1_DES_negative_offset.keys())[-1]], 
+        G2_good[list(G2_good.keys())[-1]], 
+        G2_positive_offset[list(G2_positive_offset.keys())[-1]], 
+        G2_negative_offset[list(G2_negative_offset.keys())[-1]]
+    ]
+
+    ## Mean and SD classification 
+    #test1(*TEST_DATA)
+
+
+    ## DNN classification
+    X, y = merge_data(*TEST_DATA)
+    X_train, y_train, X_test, y_test = split_data(X, y, random_=2**10)
+
+
