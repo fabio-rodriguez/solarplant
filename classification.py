@@ -60,12 +60,12 @@ def sd_classify(good_data, fail_data, sd_factor=2.5):
     print("specificity", round(specificity,2))
 
 
-def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/"):
+def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/mymodel"):
 
     model=basic_model()
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    history = model.fit(x_train, y_train, validation_split=0.3, epochs=10, batch_size=20)
+    history = model.fit(x_train, y_train, validation_split=0.3, epochs=15, batch_size=20)
 
     plot_history(history)
 
@@ -82,8 +82,8 @@ def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/"):
 def basic_model():
 
     model = Sequential()
-    model.add(Dense(12, input_dim=5, activation='relu'))
-    model.add(Dense(8, activation='relu'))
+    model.add(Dense(20, input_dim=5, activation='relu'))
+    model.add(Dense(10, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
 
     return model

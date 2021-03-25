@@ -143,8 +143,8 @@ if __name__ == "__main__":
 
     ## DNN classification
     X, y = merge_data(*TEST_DATA)
-    X_train, y_train, X_test, y_test = split_data(X, y, random_=2**10)
+    X_train, y_train, X_test, y_test = split_data(X, y, random_=2**11)
 
     #basic_nn_classify(X_train, y_train, X_test, y_test)
 
-    test_model(X_test,y_test,"models")
+    test_model(X_test,y_test,"models/mymodel")

@@ -32,9 +32,6 @@ def test_model(X, y, path):
 
 def plot_history(record, path=""):
 
-    print(record)
-    print(record.history.keys())
-
     plt.plot(record.history['accuracy'])
     plt.plot(record.history['val_accuracy'])
     plt.title('model accuracy')
@@ -45,8 +42,8 @@ def plot_history(record, path=""):
     plt.savefig(path+"accuracy_hist.png")
     plt.close()
 
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
+    plt.plot(record.history['loss'])
+    plt.plot(record.history['val_loss'])
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
