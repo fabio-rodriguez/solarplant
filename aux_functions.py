@@ -20,17 +20,19 @@ def split_data(X, y, test_percent=0.3, random_=None):
 
 
 def test_model(X, y, path):
+    '''
+        Given X and y from the test set creates the confusion matrix from a model readed from path 
+    '''
 
     model = keras.models.load_model(path)
-
     y_pred = model.predict_classes(X)
-
     print_confusion_matrix(y, y_pred)
-
-    plot_model(model, to_file='model.png')
 
 
 def plot_history(record, path=""):
+    '''
+        Given a model's record, plot the accuracy and loss graphics per epoch
+    '''
 
     plt.plot(record.history['accuracy'])
     plt.plot(record.history['val_accuracy'])
@@ -54,6 +56,10 @@ def plot_history(record, path=""):
 
 
 def print_confusion_matrix(y_true, y_pred):
+    '''
+        Prints confusion matrix from real and predicted data sets
+    '''
+
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
     print_table_in_cmd(["1","0"], [
@@ -69,8 +75,25 @@ def print_confusion_matrix(y_true, y_pred):
 
 
 def print_table_in_cmd(headers, data):
+    '''
+        Auxiliar method for printing confusion matrix on console
+    '''
 
     row_format ="{:>7}" * (len(headers) + 1)
     print(row_format.format("", *headers))
     for team, row in zip(headers, data):
         print(row_format.format(team, *row))
+
+
+def save_model_info(model, hist, path):
+    '''
+        Saves the model and the accuracy and loss info in the path direction 
+    '''
+
+    model.save(path)
+    plot_history(hist, path)
+
+
+
+
+

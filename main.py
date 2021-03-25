@@ -3,8 +3,8 @@ import os
 import scipy.io
 import sys
 
-from aux_functions import split_data, test_model 
-from classification import sd_classify, basic_nn_classify
+from aux_functions import split_data, test_model, save_model_info 
+from classification import sd_classify, basic_nn_classify, k_fold
 
 
 def read_data():
@@ -137,14 +137,26 @@ if __name__ == "__main__":
 
     TEST_DATA = [delete_columns(data, [0,6,7]) for data in data_list]
 
-    ## Mean and SD classification 
+    ## Mean and SD classification
+    #  
     #test1(*TEST_DATA)
 
-
     ## DNN classification
+
     X, y = merge_data(*TEST_DATA)
     X_train, y_train, X_test, y_test = split_data(X, y, random_=2**11)
 
     #basic_nn_classify(X_train, y_train, X_test, y_test)
+    #test_model(X_test,y_test,"models/mymodel")
 
-    test_model(X_test,y_test,"models/mymodel")
+
+    ## Test k-fold
+
+    #model, hist = k_fold(X_train, y_train, epochs_permodel=150, n_splits=5, random_=2**11)
+    #model.save("models/k_fold_test/")
+    test_model(X_test, y_test, "models/k_fold_test/")
+
+    test_model(X, y, "models/k_fold_test/")
+
+    ##Save model
+    #save_model_info(model, hist, "models/save_test/")

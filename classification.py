@@ -5,6 +5,7 @@ import statistics
 from aux_functions import plot_history
 from keras.models import Sequential
 from keras.layers import Dense
+from sklearn.model_selection import StratifiedKFold
 
 
 def sd_classify(good_data, fail_data, sd_factor=2.5):
@@ -87,4 +88,65 @@ def basic_model():
     model.add(Dense(1, activation='sigmoid'))
 
     return model
+
+
+def k_fold(X_train, y_train, create_model=basic_model, n_splits=5, random_=None, epochs_permodel=150, batch_size_permodel=10, path=None):
+    
+    if random_:
+        skf = StratifiedKFold(n_splits = n_splits, random_state = random_, shuffle = True)
+    else:
+        skf = StratifiedKFold(n_splits = n_splits)
+
+    models = []
+
+    for train, test in skf.split(X_train, y_train):
+
+        X = X_train[train]
+        y = y_train[train]
+        X_val = X_train[test]
+        y_val = y_train[test]
+
+        model=create_model()
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+        
+        record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=batch_size_permodel)
+        
+        models.append((record.history["val_accuracy"], model, record))
+
+    models.sort()
+
+    if path:
+        model.save("models/k_fold_test")
+
+    return models[0][1], models[0][2]
+
+
+def build_sequential_dnn(layers):
+    '''
+        Builds a sequential neural network model given its layers
+    '''
+
+    model = Sequential()
+
+    for layer in nodes:
+        model.add(layer)
+        
+    return model
+
+
+def build_dense_sequential_dnn(n_layers, n_layer_nodes, layers_activation, input_size, output_size):
+    '''
+        Build a sequential dense dnn based on lists of node numbers and layers activation
+    '''
+
+    assert n_layers == len(n_layer_nodes) ==  len(layers_activation), "The list of node numbers and activation functions must have len n_layers" 
+    assert output_size == n_layer_nodes[-1], "Last element of n_layer_nodes corresponds tothe last layer, so its value muts be equal to output_size" 
+        
+    layers = [Dense(n_layer_nodes[0], layers_activation[0], input_dim=input_size)]
+    layers += [Dense(nodes, activation) for nodes, activation in zip(n_layer_nodes, layers_activation)]
+
+    return build_sequential_dnn(layers)
+    
+
+
 
