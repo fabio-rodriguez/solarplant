@@ -23,24 +23,26 @@ def test_model(X, y, path):
 
     model = keras.models.load_model(path)
 
-    #_, accuracy = model.evaluate(X, y)
-    #print('Accuracy: %.2f' % (accuracy*100))
+    y_pred = model.predict_classes(X)
+
+    print_confusion_matrix(y, y_pred)
 
     plot_model(model, to_file='model.png')
 
 
-def plot_history(history, path=""):
+def plot_history(record, path=""):
 
-    print(history.history.keys())
+    print(record)
+    print(record.history.keys())
 
-    plt.plot(history.history['accuracy'])
-    plt.plot(history.history['val_acc'])
+    plt.plot(record.history['accuracy'])
+    plt.plot(record.history['val_accuracy'])
     plt.title('model accuracy')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
-    plt.save(path+"accuracy_hist.png")
+    plt.savefig(path+"accuracy_hist.png")
     plt.close()
 
     plt.plot(history.history['loss'])
@@ -50,27 +52,28 @@ def plot_history(history, path=""):
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
     plt.show()
-    plt.save(path+"loss_hist.png")
+    plt.savefig(path+"loss_hist.png")
     plt.close()
 
 
 def print_confusion_matrix(y_true, y_pred):
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
-    print_table_in_cmd(["\\","1","0"], [
-        ["1", tp, tn],
-        ["0", fp, fn],
+    print_table_in_cmd(["1","0"], [
+        [tp, fp],
+        [fn, tn],
     ])
 
     print()
-    print(f"Accuraccy: {round((tp + fn)/(tn + fp + fn + tp),2)}")
-    print(f"Sensitivity: {round(tp/(tn + tp),2)}")
-    print(f"Specificity: {round(fn/(fp + fn),2)}")
+    print(f"Accuraccy: {round((tp + tn)/(tn + fp + fn + tp),2)}")
+    print(f"Sensitivity: {round(tp/(tp + fp),2)}")
+    print(f"Specificity: {round(tn/(tn + fn),2)}")
     print()
+
 
 def print_table_in_cmd(headers, data):
 
-    row_format ="{:>15}" * (len(headers) + 1)
+    row_format ="{:>7}" * (len(headers) + 1)
     print(row_format.format("", *headers))
     for team, row in zip(headers, data):
         print(row_format.format(team, *row))
