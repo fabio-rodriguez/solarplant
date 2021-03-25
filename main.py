@@ -3,7 +3,7 @@ import os
 import scipy.io
 import sys
 
-from aux_functions import split_data 
+from aux_functions import split_data, test_model 
 from classification import sd_classify, basic_nn_classify
 
 
@@ -145,5 +145,6 @@ if __name__ == "__main__":
     X, y = merge_data(*TEST_DATA)
     X_train, y_train, X_test, y_test = split_data(X, y, random_=2**10)
 
-    basic_nn_classify(X_train, y_train, X_test, y_test)
+    #basic_nn_classify(X_train, y_train, X_test, y_test)
 
+    test_model(X_test,y_test,"models")

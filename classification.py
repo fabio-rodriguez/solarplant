@@ -1,6 +1,8 @@
 
 import numpy
 import statistics
+
+from aux_functions import plot_history
 from keras.models import Sequential
 from keras.layers import Dense
 
@@ -63,7 +65,9 @@ def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/"):
     model=basic_model()
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    model.fit(x_train, y_train, epochs=2, batch_size=20)
+    history = model.fit(x_train, y_train, validation_split=0.3, epochs=10, batch_size=20)
+
+    plot_history(history)
 
     _, accuracy = model.evaluate(x_train, y_train)
     print('Accuracy: %.2f' % (accuracy*100))
@@ -78,8 +82,8 @@ def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/"):
 def basic_model():
 
     model = Sequential()
-    model.add(Dense(20, input_dim=5, activation='relu'))
-    model.add(Dense(10, activation='relu'))
+    model.add(Dense(12, input_dim=5, activation='relu'))
+    model.add(Dense(8, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
 
     return model
