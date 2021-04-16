@@ -1,8 +1,9 @@
 
+import json
 import numpy
 import statistics
 
-from aux_functions import plot_history
+from aux_functions import plot_history, mean_sd_bycolumn
 from keras.models import Sequential
 from keras.layers import Dense
 from sklearn.model_selection import StratifiedKFold
@@ -10,15 +11,8 @@ from sklearn.model_selection import StratifiedKFold
 
 def sd_classify(good_data, fail_data, sd_factor=2.5):
     
-    n = len(good_data[0])
-    means = numpy.zeros(n)
-    sds = numpy.zeros(n)
-
-    # Calcular la media y la desviacion estandar de cada campo de los datos buenos   
-    for i in range(n):
-        columni = [column[i] for column in good_data]
-        means[i] = sum(columni)/len(columni)
-        sds[i] = statistics.pstdev(columni)
+    #n = len(good_data[0])
+    means, sds = mean_sd_bycolumn(good_data)
 
     is_within_bounds = lambda value, i: ((means[i] - sd_factor*sds[i]) <= value) and (value <= (means[i] + sd_factor*sds[i])) 
     is_positive = lambda X: not bool(len(X) - len([xi for i, xi in enumerate(X) if is_within_bounds(xi, i)]))
@@ -59,6 +53,57 @@ def sd_classify(good_data, fail_data, sd_factor=2.5):
     print("precision", round(precision,2))
     print("sensitivity", round(sensitivity,2))
     print("specificity", round(specificity,2))
+
+
+def sd_k_fold(X_train, y_train, sd_factor=2.5, n_splits=5, random_=None, path=None):
+    
+    if random_:
+        skf = StratifiedKFold(n_splits = n_splits, random_state = random_, shuffle = True)
+    else:
+        skf = StratifiedKFold(n_splits = n_splits)
+
+    models = []
+
+    for train, test in skf.split(X_train, y_train):
+
+        y = y_train[train]
+        data = [x for i, x in enumerate(X_train[train]) if y[i] == 1]
+        means, sds = mean_sd_bycolumn(data)
+
+        is_within_bounds = lambda value, i: ((means[i] - sd_factor*sds[i]) <= value) and (value <= (means[i] + sd_factor*sds[i])) 
+        is_positive = lambda X: not bool(len(X) - len([xi for i, xi in enumerate(X) if is_within_bounds(xi, i)]))
+
+        ## Validation
+
+        X_val = X_train[test]
+        y_val = y_train[test]
+        true_positives, true_negatives, false_negatives, false_positives = 0, 0, 0, 0
+
+        for X, y in zip(X_val, y_val):
+            if y:
+                if is_positive(X):
+                    true_positives += 1
+                else:
+                    false_negatives += 1
+            else:
+                if is_positive(X):
+                    false_positives += 1
+                else:
+                    true_negatives += 1
+
+        models.append({
+            "means": means.tolist(),
+            "sds": sds.tolist(),
+            "sd_factor": sd_factor,
+            "precision": (true_positives + true_negatives)/ (false_positives + true_negatives + true_positives + false_negatives),
+            "sensitivity": (true_positives)/ (true_positives + false_negatives), 
+            "specificity":   (true_negatives)/ (true_negatives + false_positives)     
+        })
+        
+    with open(path if path else "models/sd_kfold.json", "w+") as file:
+        file.write(json.dumps(models))
+
+    return models
 
 
 def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/mymodel"):
@@ -116,7 +161,7 @@ def k_fold(X_train, y_train, create_model=basic_model, n_splits=5, random_=None,
     models.sort()
 
     if path:
-        model.save("models/k_fold_test")
+        model.save("models/dnn_k_fold_test")
 
     return models[0][1], models[0][2]
 

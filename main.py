@@ -3,8 +3,8 @@ import os
 import scipy.io
 import sys
 
-from aux_functions import split_data, test_model, save_model_info 
-from classification import sd_classify, basic_nn_classify, k_fold
+from aux_functions import *
+from classification import sd_classify, basic_nn_classify, k_fold, sd_k_fold
 
 
 def read_data():
@@ -135,6 +135,8 @@ if __name__ == "__main__":
         G2_negative_offset[list(G2_negative_offset.keys())[-1]]
     ]
 
+    #study_plot(*merge_data(*data_list))
+
     TEST_DATA = [delete_columns(data, [0,6,7]) for data in data_list]
 
     ## Mean and SD classification
@@ -154,9 +156,16 @@ if __name__ == "__main__":
 
     #model, hist = k_fold(X_train, y_train, epochs_permodel=150, n_splits=5, random_=2**11)
     #model.save("models/k_fold_test/")
-    test_model(X_test, y_test, "models/k_fold_test/")
+    
+    #test_model(X_test, y_test, "models/k_fold_test/")
 
-    test_model(X, y, "models/k_fold_test/")
+    #test_model(X, y, "models/k_fold_test/")
 
     ##Save model
     #save_model_info(model, hist, "models/save_test/")
+
+
+    ## SD k-fold
+    models = sd_k_fold(X_train, y_train, random_=1024, path="models/sd_k_fold/sd_k_fold.json", sd_factor=2.2)
+    models.sort(key=lambda x: x["precision"])
+    k_fold_classify(X_test, y_test, models[0])

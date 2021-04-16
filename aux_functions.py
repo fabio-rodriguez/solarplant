@@ -1,5 +1,6 @@
 import keras
 import numpy as np
+import statistics
 import tensorflow as tf
 
 #from keras.utils.vis_utils import plot_model
@@ -7,6 +8,23 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import plot_model
+
+
+def mean_sd_bycolumn(data):
+    '''
+    Calcular la media y la desviacion estandar de cada feature de los datos
+    '''
+
+    n = len(data[0])
+    means = np.zeros(n)
+    sds = np.zeros(n)
+
+    for i in range(n):
+        columni = [column[i] for column in data]
+        means[i] = sum(columni)/len(columni)
+        sds[i] = statistics.pstdev(columni)
+
+    return means, sds
 
 
 def split_data(X, y, test_percent=0.3, random_=None):
@@ -94,6 +112,61 @@ def save_model_info(model, hist, path):
     plot_history(hist, path)
 
 
+def study_plot(X,y):
+
+    ## Respecto al tiempo
+    #good = [(x[0], x[4]) for x, y in zip(X, y) if y]
+    #fail = [(x[0], x[4]) for x, y in zip(X, y) if not y]
+
+    #good = [(x[0], x[5]) for x, y in zip(X, y) if y]
+    #fail = [(x[0], x[5]) for x, y in zip(X, y) if not y]
+
+    ## Relacion entre variables
+    #good = [(x[2], x[4]) for x, y in zip(X, y) if y]
+    #fail = [(x[2], x[4]) for x, y in zip(X, y) if not y]
+
+    ## Caudal es la clave
+    good = [(x[4], x[3]) for x, y in zip(X, y) if y]
+    fail = [(x[4], x[3]) for x, y in zip(X, y) if not y]
+
+    goodX, goodY = zip(*good)        
+    failX, failY = zip(*fail)
+
+    plt.plot(goodX, goodY, "b.")
+    plt.plot(failX, failY, "r.")
+    plt.show()        
 
 
+def k_fold_classify(X_test, y_test, model):
 
+    means, sds = model["means"], model["sds"]
+    sd_factor = model["sd_factor"]
+    is_within_bounds = lambda value, i: ((means[i] - sd_factor*sds[i]) <= value) and (value <= (means[i] + sd_factor*sds[i])) 
+    is_positive = lambda X: not bool(len(X) - len([xi for i, xi in enumerate(X) if is_within_bounds(xi, i)]))
+
+    true_positives, true_negatives, false_negatives, false_positives = 0, 0, 0, 0
+
+    for X, y in zip(X_test, y_test):
+        if y:
+            if is_positive(X):
+                true_positives += 1
+            else:
+                false_negatives += 1
+        else:
+            if is_positive(X):
+                false_positives += 1
+            else:
+                true_negatives += 1
+
+    print(" ", 1, "   ", 0)
+    print(1, true_positives, false_negatives)
+    print(0, false_positives, true_negatives)
+    print()
+
+    precision =  (true_positives + true_negatives)/ (false_positives + true_negatives + true_positives + false_negatives) 
+    sensitivity =  (true_positives)/ (true_positives + false_negatives) 
+    specificity =  (true_negatives)/ (true_negatives + false_positives) 
+
+    print("precision", round(precision,2))
+    print("sensitivity", round(sensitivity,2))
+    print("specificity", round(specificity,2))
