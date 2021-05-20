@@ -37,13 +37,22 @@ def split_data(X, y, test_percent=0.3, random_=None):
     return X_train, y_train, X_test, y_test
 
 
-def test_model(X, y, path):
+def test_model_from_path(X, y, path):
     '''
         Given X and y from the test set creates the confusion matrix from a model readed from path 
     '''
 
     model = keras.models.load_model(path)
     y_pred = model.predict_classes(X)
+    print_confusion_matrix(y, y_pred)
+
+
+def test_model(X, y, model):
+    '''
+        Given X and y from the test set creates the confusion matrix from a model readed from path 
+    '''
+
+    y_pred = model.predict(X)
     print_confusion_matrix(y, y_pred)
 
 
@@ -86,9 +95,9 @@ def print_confusion_matrix(y_true, y_pred):
     ])
 
     print()
-    print(f"Accuraccy: {round((tp + tn)/(tn + fp + fn + tp),2)}")
-    print(f"Sensitivity: {round(tp/(tp + fp),2)}")
-    print(f"Specificity: {round(tn/(tn + fn),2)}")
+    print(f"Accuraccy: {round((tp + tn)/(tn + fp + fn + tp),5)}")
+    print(f"Sensitivity: {round(tp/(tp + fp),5)}")
+    print(f"Specificity: {round(tn/(tn + fn),5)}")
     print()
 
 
@@ -126,14 +135,14 @@ def study_plot(X,y):
     #fail = [(x[2], x[4]) for x, y in zip(X, y) if not y]
 
     ## Caudal es la clave
-    good = [(x[4], x[3]) for x, y in zip(X, y) if y]
-    fail = [(x[4], x[3]) for x, y in zip(X, y) if not y]
+    good = [(x[0], x[3]) for x, y in zip(X, y) if y]
+    fail = [(x[0], x[3]) for x, y in zip(X, y) if not y]
 
     goodX, goodY = zip(*good)        
     failX, failY = zip(*fail)
 
-    plt.plot(goodX, goodY, "b.")
-    plt.plot(failX, failY, "r.")
+    plt.plot(goodX, goodY, "b.", markersize=7)
+    plt.plot(failX, failY, "r.",markersize=2)
     plt.show()        
 
 

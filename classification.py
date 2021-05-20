@@ -1,12 +1,16 @@
-
 import json
+from matplotlib.pyplot import hist
 import numpy
 import statistics
 
-from aux_functions import plot_history, mean_sd_bycolumn
+from aux_functions import plot_history, mean_sd_bycolumn, print_confusion_matrix, save_model_info
 from keras.models import Sequential
 from keras.layers import Dense
-from sklearn.model_selection import StratifiedKFold
+from keras.utils import np_utils
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import KFold, StratifiedKFold, cross_val_score 
+from sklearn.preprocessing import LabelEncoder
 
 
 def sd_classify(good_data, fail_data, sd_factor=2.5):
@@ -111,7 +115,7 @@ def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/mymodel"):
     model=basic_model()
     model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    history = model.fit(x_train, y_train, validation_split=0.3, epochs=15, batch_size=20)
+    history = model.fit(x_train, y_train, validation_split=0.3, epochs=200, batch_size=20)
 
     plot_history(history)
 
@@ -128,8 +132,8 @@ def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/mymodel"):
 def basic_model():
 
     model = Sequential()
-    model.add(Dense(20, input_dim=5, activation='relu'))
-    model.add(Dense(10, activation='relu'))
+    model.add(Dense(10, input_dim=5, activation='relu'))
+    #model.add(Dense(5, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
 
     return model
@@ -173,25 +177,104 @@ def build_sequential_dnn(layers):
 
     model = Sequential()
 
-    for layer in nodes:
+    for layer in layers:
         model.add(layer)
+
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         
     return model
 
 
-def build_dense_sequential_dnn(n_layers, n_layer_nodes, layers_activation, input_size, output_size):
+def build_dense_sequential_dnn(nodes_by_layer, layers_activation, input_dim):
     '''
         Build a sequential dense dnn based on lists of node numbers and layers activation
     '''
 
-    assert n_layers == len(n_layer_nodes) ==  len(layers_activation), "The list of node numbers and activation functions must have len n_layers" 
-    assert output_size == n_layer_nodes[-1], "Last element of n_layer_nodes corresponds tothe last layer, so its value muts be equal to output_size" 
+    assert len(nodes_by_layer) == len(layers_activation), "The list of node numbers and activation functions must have len n_layers" 
         
-    layers = [Dense(n_layer_nodes[0], layers_activation[0], input_dim=input_size)]
-    layers += [Dense(nodes, activation) for nodes, activation in zip(n_layer_nodes, layers_activation)]
+    layers = [Dense(nodes_by_layer[0], input_dim=input_dim, activation=layers_activation[0])]
+    layers += [Dense(nodes, activation=activation) for nodes, activation in zip(nodes_by_layer[1:], layers_activation[1:])]
 
     return build_sequential_dnn(layers)
+
+
+def k_fold_generic(X_train, y_train, model=None, path=None, random_=None, n_splits=5):
+
+    if random_:
+        skf = StratifiedKFold(n_splits = n_splits, random_state = random_, shuffle = True)
+    else:
+        skf = StratifiedKFold(n_splits = n_splits)
+
+    models = []
+
+    for train, test in skf.split(X_train, y_train):
+
+        X = X_train[train]
+        y = y_train[train]
+        X_val = X_train[test]
+        y_val = y_train[test]
+
+        record = model.fit(X, y, validation_data=(X_val,y_val))        
+        models.append((record.history["val_accuracy"], model, record))
+
+    models.sort()
+
+    if path:
+        model.save("models/dnn_k_fold_test")
+
+    return models[0][1], models[0][2]
+
+
+def basic_model_mult_classes():
+
+    return build_dense_sequential_dnn([36,18,9], ['relu', 'relu', 'softmax'], 5)
+
+
+def k_fold_multiclass(X, y, create_model=basic_model, n_splits=4, seed=None, epochs_permodel=150, batch_size_permodel=10, path=None):
     
+    encoder = LabelEncoder()
+    encoder.fit(y)
+    encoded_Y = encoder.transform(y)
+    one_hot_y = np_utils.to_categorical(encoded_Y)
+    
+    #model = create_model()
+    #model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    
+    if seed:
+        kfold = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    else:
+        kfold = KFold(n_splits=n_splits)
 
+    results = list()
+    for train_ix, test_ix in kfold.split(X):
+            # prepare data
+            X_train, X_val = X[train_ix], X[test_ix]
+            y_train, y_val = one_hot_y[train_ix], one_hot_y[test_ix]
+            # define model
+            model = create_model()
+            # fit model
+            record = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=10)
+            # make a prediction on the test set
+            results.append((record.history["val_accuracy"], model, record))
+    
+    results.sort(key= lambda x: x[0])
+    _, m, h = results[0]
 
+    if not path:
+        plot_history(h)
+        save_model_info(m, h, "models/dnn_k_fold_multiclass")
+   
+    return results
+    
+    #estimator = KerasClassifier(build_fn=create_model, epochs=epochs_permodel, batch_size=batch_size_permodel, verbose=0)
+    estimator = KerasClassifier(build_fn=create_model, epochs=epochs_permodel, batch_size=batch_size_permodel)
+    
+    results = cross_val_score(estimator, X_train, one_hot_y, cv=kfold)
+
+    print("Baseline: %.2f%% (%.2f%%)" % (results.mean()*100, results.std()*100))
+
+    print(results)
+
+    if not path:
+        results.save("models/dnn_k_fold_multiclass")
 
