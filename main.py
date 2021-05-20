@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
     ## NN for multiple classes
 
-    X, y  = read_FAULT_DATA()
+    X, y  = read_FAULT_DATA("multiclass")
     X_train, y_train, X_test, y_test = split_data(X, y, random_=2**11)
 
     #print(len(set(map(tuple, X_train.tolist())).intersection(set(map(tuple, X_test.tolist())))))
