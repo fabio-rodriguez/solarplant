@@ -5,7 +5,7 @@ import tensorflow as tf
 
 #from keras.utils.vis_utils import plot_model
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, mean_absolute_error 
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import plot_model
 
@@ -37,14 +37,33 @@ def split_data(X, y, test_percent=0.3, random_=None):
     return X_train, y_train, X_test, y_test
 
 
-def test_model_from_path(X, y, path):
+def test_model_from_path(X, y, path, reg=None, mean_y = None, std_y = None, Time = None):
     '''
         Given X and y from the test set creates the confusion matrix from a model readed from path 
     '''
 
     model = keras.models.load_model(path)
-    y_pred = model.predict_classes(X)
-    print_confusion_matrix(y, y_pred)
+    if reg:
+        y_pred = model.predict(X)
+        if mean_y and std_y:
+            y = y*std_y+mean_y
+            y_pred = y_pred*std_y+mean_y
+
+        try: 
+            plt.plot(Time, y, ".",label="real values", color="blue")
+            plt.plot(Time, y_pred, ".", label="predicted values", color="red", alpha=0.2)
+            plt.legend()
+            plt.savefig(path+"predictions.jpg")
+            plt.close()
+        except:
+            pass
+
+        return mean_absolute_error(y, y_pred=y_pred)
+        #print(list(zip(y, list(y_pred[:, 0]))))
+    else:
+        y_pred = model.predict_classes(X)
+        print_confusion_matrix(y, y_pred)
+
 
 
 def test_model(X, y, model):
@@ -56,18 +75,25 @@ def test_model(X, y, model):
     print_confusion_matrix(y, y_pred)
 
 
-def plot_history(record, path=""):
+def plot_history(record, path="", reg=None):
     '''
         Given a model's record, plot the accuracy and loss graphics per epoch
     '''
 
-    plt.plot(record.history['accuracy'])
-    plt.plot(record.history['val_accuracy'])
-    plt.title('model accuracy')
-    plt.ylabel('accuracy')
+    if reg:
+        plt.plot(record.history['mean_absolute_error'])
+        plt.plot(record.history['val_mean_absolute_error'])
+        plt.title('model mean absolute error')
+        plt.ylabel('mean absolute error')
+    else:        
+        plt.plot(record.history['accuracy'])
+        plt.plot(record.history['val_accuracy'])
+        plt.title('model accuracy')
+        plt.ylabel('accuracy')
+    
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
+    #plt.show()
     plt.savefig(path+"accuracy_hist.png")
     plt.close()
 
@@ -77,7 +103,7 @@ def plot_history(record, path=""):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'test'], loc='upper left')
-    plt.show()
+    #plt.show()
     plt.savefig(path+"loss_hist.png")
     plt.close()
 
@@ -138,12 +164,50 @@ def study_plot(X,y):
     good = [(x[0], x[3]) for x, y in zip(X, y) if y]
     fail = [(x[0], x[3]) for x, y in zip(X, y) if not y]
 
+    print(len(good))
+    print(len(fail))
     goodX, goodY = zip(*good)        
     failX, failY = zip(*fail)
 
     plt.plot(goodX, goodY, "b.", markersize=7)
     plt.plot(failX, failY, "r.",markersize=2)
     plt.show()        
+
+
+
+
+def study_plot_multiclass(X,y):
+    
+    classes = set(y)
+
+    for size, _class in enumerate(classes):
+        ##Irradiancia -> No sense
+        #points = [(x[0], x[1]) for x, y in zip(X, y) if y==_class]
+        
+        ##T ambiente -> No sense
+        #points = [(x[0], x[2]) for x, y in zip(X, y) if y==_class]
+        
+        ##Caudal
+        #points = [(x[0], x[3]) for x, y in zip(X, y) if y==_class]
+        
+        ##T entrada -> No sense
+        #points = [(x[0], x[4]) for x, y in zip(X, y) if y==_class]
+        
+        ##T salida -> No sense
+        #points = [(x[0], x[5]) for x, y in zip(X, y) if y==_class]
+        
+        ##offset
+        #points = [(x[0], x[6]) for x, y in zip(X, y) if y==_class]
+        
+
+        ##Caudal vs T Salida
+        points = [(x[3], x[4], x[5]) for x, y in zip(X, y) if y==_class]
+        
+        Xs, Ys, Zs = zip(*points)        
+        plt.plot(Xs, Ys, Zs, ".", markersize=len(classes)-size)
+    
+    plt.show()        
+
 
 
 def k_fold_classify(X_test, y_test, model):

@@ -132,9 +132,21 @@ def basic_nn_classify(x_train, y_train, x_test, y_test, path="models/mymodel"):
 def basic_model():
 
     model = Sequential()
-    model.add(Dense(10, input_dim=5, activation='relu'))
-    #model.add(Dense(5, activation='relu'))
+    model.add(Dense(10, input_dim=7, activation='relu'))
     model.add(Dense(1, activation='sigmoid'))
+
+    return model
+
+
+def basic_regression_model(input_size):
+
+    model = Sequential()
+    model.add(Dense(20, input_dim=input_size, activation='relu'))
+    model.add(Dense(20, activation='relu'))
+    model.add(Dense(20, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(5, activation='relu'))
+    model.add(Dense(1, activation='linear'))
 
     return model
 
@@ -231,7 +243,7 @@ def basic_model_mult_classes():
 
 
 def k_fold_multiclass(X, y, create_model=basic_model, n_splits=4, seed=None, epochs_permodel=150, batch_size_permodel=10, path=None):
-    
+
     encoder = LabelEncoder()
     encoder.fit(y)
     encoded_Y = encoder.transform(y)
@@ -265,16 +277,36 @@ def k_fold_multiclass(X, y, create_model=basic_model, n_splits=4, seed=None, epo
         save_model_info(m, h, "models/dnn_k_fold_multiclass")
    
     return results
+
+
+def k_fold_regression_NN(X_train, y_train, input_size, create_model=basic_regression_model, n_splits=5, seed=None, epochs_permodel=150, batch_size_permodel=10, path=None):
     
-    #estimator = KerasClassifier(build_fn=create_model, epochs=epochs_permodel, batch_size=batch_size_permodel, verbose=0)
-    estimator = KerasClassifier(build_fn=create_model, epochs=epochs_permodel, batch_size=batch_size_permodel)
-    
-    results = cross_val_score(estimator, X_train, one_hot_y, cv=kfold)
+    if seed:
+        kfold = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    else:
+        kfold = KFold(n_splits=n_splits)
 
-    print("Baseline: %.2f%% (%.2f%%)" % (results.mean()*100, results.std()*100))
 
-    print(results)
+    models = []
 
-    if not path:
-        results.save("models/dnn_k_fold_multiclass")
+    for train, test in kfold.split(X_train, y_train):
 
+        X = X_train[train]
+        y = y_train[train]
+        X_val = X_train[test]
+        y_val = y_train[test]
+
+        model=create_model(input_size)
+        model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mean_absolute_error'])
+        
+        record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=batch_size_permodel)
+        models.append((record.history['val_mean_absolute_error'], model, record))
+
+    models.sort()
+
+    if path:
+        model.save(path)
+    else:
+        model.save("models/dnn_k_fold_test")
+
+    return models[0][1], models[0][2]
