@@ -141,11 +141,10 @@ def basic_model():
 def basic_regression_model(input_size):
 
     model = Sequential()
-    model.add(Dense(20, input_dim=input_size, activation='relu'))
-    model.add(Dense(20, activation='relu'))
+    model.add(Dense(40, input_dim=input_size, activation='relu'))
+    model.add(Dense(40, activation='relu'))
     model.add(Dense(20, activation='relu'))
     model.add(Dense(10, activation='relu'))
-    model.add(Dense(5, activation='relu'))
     model.add(Dense(1, activation='linear'))
 
     return model
@@ -299,7 +298,8 @@ def k_fold_regression_NN(X_train, y_train, input_size, create_model=basic_regres
         model=create_model(input_size)
         model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mean_absolute_error'])
         
-        record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=batch_size_permodel)
+        #record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=batch_size_permodel, verbose=0)
+        record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=1000) # verbose=0
         models.append((record.history['val_mean_absolute_error'], model, record))
 
     models.sort()

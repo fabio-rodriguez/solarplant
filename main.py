@@ -210,59 +210,103 @@ def test_networks2():
     y_flow = X[:, 1]
     y_irr = X[:, 0]
 
-    ##Flow From Four
-    Xs = np.delete(X, [1], 1)
-    X_train, y_train, X_test, y_test = split_data(Xs, y_flow, test_percent=0.8, random_=2**11)
-    print(len(X_train))
-    model, hist = k_fold_regression_NN(X_train, y_train, 4, epochs_permodel=500, n_splits=5, seed=2**11, path="models/test3/flow-from-4/")
+    path = "models/dnn_regression"
 
-    plot_history(hist, path="models/test3/flow-from-4/", reg=1)
+    ##Flow From Four
+    name = "flow-from-4"
+    Xs = np.delete(X, [1], 1)
+    X_train, y_train, X_test, y_test = split_data(Xs, y_flow, test_percent=0.3, random_=2**11)
+    print(len(X_train))
+    model, hist = k_fold_regression_NN(X_train, y_train, 4, epochs_permodel=400, n_splits=4, seed=2**11, path=f"{path}/{name}/")
+
+    plot_history(hist, path= f"{path}/{name}/", reg=1)
 
     with open("data.txt", "w+") as file:
-        error = test_model_from_path(X_test, y_test, "models/test3/flow-from-4/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow)
+        error = test_model_from_path(X_test, y_test, f"{path}/{name}/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow)
         file.write(f"Validation Set Error flow-from-4: {error} \n")
-        error = test_model_from_path(Xs, y_flow, "models/test3/flow-from-4/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow, Time=list(range(N)))
+        error = test_model_from_path(Xs, y_flow, f"{path}/{name}/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow, Time=list(range(N)))
         file.write(f"Total Set Error flow-from-4: {error} \n")
 
     ##Flow From Three
+    name = "flow-from-3"
     Xs = np.delete(X, [0, 1], 1)
-    X_train, y_train, X_test, y_test = split_data(Xs, y_flow, test_percent=0.8, random_=2**11)
-    model, hist = k_fold_regression_NN(X_train, y_train, 3, epochs_permodel=1000, n_splits=5, seed=2**11, path="models/test2/flow-from-3/")
+    X_train, y_train, X_test, y_test = split_data(Xs, y_flow, test_percent=0.3, random_=2**11)
+    model, hist = k_fold_regression_NN(X_train, y_train, 3, epochs_permodel=400, n_splits=4, seed=2**11, path=f"{path}/{name}/")
 
-    plot_history(hist, path="models/test3/flow-from-3/", reg=1)
+    plot_history(hist, path=f"{path}/{name}/", reg=1)
 
     with open("data.txt", "a+") as file:
-        error = test_model_from_path(X_test, y_test, "models/test3/flow-from-3/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow)
+        error = test_model_from_path(X_test, y_test, f"{path}/{name}/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow)
         file.write(f"Validation Set Error flow-from-3: {error} \n")
-        error = test_model_from_path(Xs, y_flow, "models/test3/flow-from-3/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow, Time=list(range(N)))
+        error = test_model_from_path(Xs, y_flow, f"{path}/{name}/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow, Time=list(range(N)))
         file.write(f"Total Set Error flow-from-3: {error} \n")
 
     ##Irr From Four
+    name = "Irr-from-4"
     Xs = np.delete(X, [0], 1)
-    X_train, y_train, X_test, y_test = split_data(Xs, y_irr, test_percent=0.8, random_=2**11)
-    model, hist = k_fold_regression_NN(X_train, y_train, 4, epochs_permodel=500, n_splits=5, seed=2**11, path="models/test2/Irr-from-4/")
+    X_train, y_train, X_test, y_test = split_data(Xs, y_irr, test_percent=0.3, random_=2**11)
+    model, hist = k_fold_regression_NN(X_train, y_train, 4, epochs_permodel=400, n_splits=4, seed=2**11, path=f"{path}/{name}/")
 
-    plot_history(hist, path="models/test3/Irr-from-4/", reg=1)
+    plot_history(hist, path=f"{path}/{name}/", reg=1)
 
     with open("data.txt", "a+") as file:
-        error = test_model_from_path(X_test, y_test, "models/test3/Irr-from-4/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr)
+        error = test_model_from_path(X_test, y_test, f"{path}/{name}/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr)
         file.write(f"Validation Set Error Irr-from-4: {error} \n")
-        error = test_model_from_path(Xs, y_irr, "models/test3/Irr-from-4/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr, Time=list(range(N)))
+        error = test_model_from_path(Xs, y_irr, f"{path}/{name}/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr, Time=list(range(N)))
         file.write(f"Total Set Error Irr-from-4: {error} \n")
 
     ##Irr From Three
+    name = "Irr-from-3"
     Xs = np.delete(X, [0, 1], 1)
-    X_train, y_train, X_test, y_test = split_data(Xs, y_irr, test_percent=0.8, random_=2**11)
-    model, hist = k_fold_regression_NN(X_train, y_train, 3, epochs_permodel=1000, n_splits=5, seed=2**11, path="models/test2/Irr-from-3/")
+    X_train, y_train, X_test, y_test = split_data(Xs, y_irr, test_percent=0.3, random_=2**11)
+    model, hist = k_fold_regression_NN(X_train, y_train, 3, epochs_permodel=400, n_splits=4, seed=2**11, path=f"{path}/{name}/")
 
-    plot_history(hist, path="models/test3/Irr-from-3/", reg=1)
+    plot_history(hist, path=f"{path}/{name}/", reg=1)
 
     with open("data.txt", "a+") as file:
-        error = test_model_from_path(X_test, y_test, "models/test3/Irr-from-3/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr)
+        error = test_model_from_path(X_test, y_test, f"{path}/{name}/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr)
         file.write(f"Validation Set Error Irr-from-3: {error} \n")
-        error = test_model_from_path(Xs, y_irr, "models/test3/Irr-from-3/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr, Time=list(range(N)))
+        error = test_model_from_path(Xs, y_irr, f"{path}/{name}/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr, Time=list(range(N)))
         file.write(f"Total Set Error Irr-from-3: {error} \n")
 
+
+def check_trained_models():
+    X  = read_NEW_DATA()
+    N = len(X)
+    print(N)
+
+    mean_y_flow = sum(X[:, 1])/len(X[:, 1])
+    std_y_flow = statistics.pstdev(X[:, 1])
+
+    mean_y_irr = sum(X[:, 0])/len(X[:, 0])
+    std_y_irr = statistics.pstdev(X[:, 0])
+
+    X = preprocessing.scale(X) 
+
+    y_flow = X[:, 1]
+    y_irr = X[:, 0]
+
+    Xs= np.delete(X, [1], 1)
+    with open("testing.txt", "w+") as file:
+        error = test_model_from_path(Xs, y_flow, "models/test2/flow-from-4/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow)
+        file.write(f"Total Set Error flow-from-4: {error} \n")
+    
+    Xs= np.delete(X, [0, 1], 1)
+    with open("testing.txt", "a+") as file:
+        error = test_model_from_path(Xs, y_flow, "models/test2/flow-from-3/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow)
+        file.write(f"Total Set Error flow-from-3: {error} \n")
+        
+
+    Xs= np.delete(X, [0], 1)
+    with open("testing.txt", "a+") as file:
+        error = test_model_from_path(Xs, y_irr, "models/test2/Irr-from-4/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr)
+        file.write(f"Total Set Error Irr-from-4: {error} \n")
+    
+    Xs= np.delete(X, [0, 1], 1)
+    with open("testing.txt", "a+") as file:
+        error = test_model_from_path(Xs, y_irr, "models/test2/Irr-from-3/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr)
+        file.write(f"Total Set Error Irr-from-3: {error} \n")
+        
 
 if __name__ == "__main__":
 
@@ -399,41 +443,6 @@ if __name__ == "__main__":
 
     #test_networks()
     
-    #test_networks2()
+    test_networks2()
 
-    X  = read_NEW_DATA()
-    N = len(X)
-    print(N)
-
-    mean_y_flow = sum(X[:, 1])/len(X[:, 1])
-    std_y_flow = statistics.pstdev(X[:, 1])
-
-    mean_y_irr = sum(X[:, 0])/len(X[:, 0])
-    std_y_irr = statistics.pstdev(X[:, 0])
-
-    X = preprocessing.scale(X) 
-
-    y_flow = X[:, 1]
-    y_irr = X[:, 0]
-
-    Xs= np.delete(X, [1], 1)
-    with open("testing.txt", "w+") as file:
-        error = test_model_from_path(Xs, y_flow, "models/test2/flow-from-4/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow)
-        file.write(f"Total Set Error flow-from-4: {error} \n")
     
-    Xs= np.delete(X, [0, 1], 1)
-    with open("testing.txt", "a+") as file:
-        error = test_model_from_path(Xs, y_flow, "models/test2/flow-from-3/", reg=1, mean_y=mean_y_flow, std_y=std_y_flow)
-        file.write(f"Total Set Error flow-from-3: {error} \n")
-        
-
-    Xs= np.delete(X, [0], 1)
-    with open("testing.txt", "a+") as file:
-        error = test_model_from_path(Xs, y_irr, "models/test2/Irr-from-4/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr)
-        file.write(f"Total Set Error Irr-from-4: {error} \n")
-    
-    Xs= np.delete(X, [0, 1], 1)
-    with open("testing.txt", "a+") as file:
-        error = test_model_from_path(Xs, y_irr, "models/test2/Irr-from-3/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr)
-        file.write(f"Total Set Error Irr-from-3: {error} \n")
-        
