@@ -217,7 +217,7 @@ def test_networks2():
     Xs = np.delete(X, [1], 1)
     X_train, y_train, X_test, y_test = split_data(Xs, y_flow, test_percent=0.3, random_=2**11)
     print(len(X_train))
-    model, hist = k_fold_regression_NN(X_train, y_train, 4, epochs_permodel=400, n_splits=4, seed=2**11, path=f"{path}/{name}/")
+    model, hist = k_fold_regression_NN(X_train, y_train, 4, epochs_permodel=500, n_splits=5, seed=2**11, path=f"{path}/{name}/")
 
     plot_history(hist, path= f"{path}/{name}/", reg=1)
 
@@ -231,7 +231,7 @@ def test_networks2():
     name = "flow-from-3"
     Xs = np.delete(X, [0, 1], 1)
     X_train, y_train, X_test, y_test = split_data(Xs, y_flow, test_percent=0.3, random_=2**11)
-    model, hist = k_fold_regression_NN(X_train, y_train, 3, epochs_permodel=400, n_splits=4, seed=2**11, path=f"{path}/{name}/")
+    model, hist = k_fold_regression_NN(X_train, y_train, 3, epochs_permodel=600, n_splits=5, seed=2**11, path=f"{path}/{name}/")
 
     plot_history(hist, path=f"{path}/{name}/", reg=1)
 
@@ -245,7 +245,7 @@ def test_networks2():
     name = "Irr-from-4"
     Xs = np.delete(X, [0], 1)
     X_train, y_train, X_test, y_test = split_data(Xs, y_irr, test_percent=0.3, random_=2**11)
-    model, hist = k_fold_regression_NN(X_train, y_train, 4, epochs_permodel=400, n_splits=4, seed=2**11, path=f"{path}/{name}/")
+    model, hist = k_fold_regression_NN(X_train, y_train, 4, epochs_permodel=500, n_splits=5, seed=2**11, path=f"{path}/{name}/")
 
     plot_history(hist, path=f"{path}/{name}/", reg=1)
 
@@ -259,7 +259,7 @@ def test_networks2():
     name = "Irr-from-3"
     Xs = np.delete(X, [0, 1], 1)
     X_train, y_train, X_test, y_test = split_data(Xs, y_irr, test_percent=0.3, random_=2**11)
-    model, hist = k_fold_regression_NN(X_train, y_train, 3, epochs_permodel=400, n_splits=4, seed=2**11, path=f"{path}/{name}/")
+    model, hist = k_fold_regression_NN(X_train, y_train, 3, epochs_permodel=600, n_splits=5, seed=2**11, path=f"{path}/{name}/")
 
     plot_history(hist, path=f"{path}/{name}/", reg=1)
 
@@ -268,6 +268,53 @@ def test_networks2():
         file.write(f"Validation Set Error Irr-from-3: {error} \n")
         error = test_model_from_path(Xs, y_irr, f"{path}/{name}/", reg=1, mean_y=mean_y_irr, std_y=std_y_irr, Time=list(range(N)))
         file.write(f"Total Set Error Irr-from-3: {error} \n")
+
+
+def test_networks3():
+    
+    X  = read_NEW_DATA()
+    path = "models/dnn_regression"
+    train_all_models(X, 0, path, "Irr", epochs_permodel= 700)
+    train_all_models(X, 1, path, "Flow", epochs_permodel= 700)
+    train_all_models(X, 2, path, "Tamb", epochs_permodel= 700)
+    train_all_models(X, 3, path, "Tin", epochs_permodel= 700)
+    train_all_models(X, 4, path, "Tout", epochs_permodel= 700)
+
+
+def train_all_models(X, yindex, path, name, test_percent=0.3, epochs_permodel=600, n_splits=5, seed=2**11, batch_size=1000):
+
+    name = name if name else yindex
+    
+    N = len(X)
+    mean_y = sum(X[:, 1])/len(X[:, yindex])
+    std_y = statistics.pstdev(X[:, yindex])
+
+    X = preprocessing.scale(X) 
+    y = X[:, yindex]
+
+    ##Flow From Three
+    print(f"***Shape[1] es {X.shape[1]}")
+    for i in range(X.shape[1]):
+
+        if i == yindex:
+            name = f"{name}-from-4"
+            Xs = np.delete(X, [yindex], 1)
+            inputNodes = X.shape[1] - 1 
+        else:
+            name = f"{name}-from-3-removing({i})"
+            Xs = np.delete(X, [i, yindex], 1)
+            inputNodes = X.shape[1] - 2
+
+        X_train, y_train, X_test, y_test = split_data(Xs, y, test_percent=test_percent, random_=seed)
+        model, hist = k_fold_regression_NN(X_train, y_train, inputNodes, epochs_permodel=epochs_permodel, batch_size_permodel= batch_size, n_splits=n_splits, seed=seed, path=f"{path}/{name}/")
+
+        plot_history(hist, path=f"{path}/{name}/", reg=1)
+
+        with open("data.txt", "a+") as file:
+            error = test_model_from_path(X_test, y_test, f"{path}/{name}/", reg=1, mean_y=mean_y, std_y=std_y)
+            file.write(f"Validation Set Error {name}: {error} \n")
+            error = test_model_from_path(Xs, y, f"{path}/{name}/", reg=1, mean_y=mean_y, std_y=std_y, Time=list(range(N)))
+            file.write(f"Total Set Error {name}: {error} \n")
 
 
 def check_trained_models():
@@ -443,6 +490,7 @@ if __name__ == "__main__":
 
     #test_networks()
     
-    test_networks2()
+    #test_networks2()
 
+    test_networks3()
     
