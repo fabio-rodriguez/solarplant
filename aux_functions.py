@@ -5,9 +5,10 @@ import tensorflow as tf
 
 #from keras.utils.vis_utils import plot_model
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, mean_absolute_error 
+from sklearn.metrics import confusion_matrix, mean_absolute_error, mean_squared_error
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import plot_model
+from tensorflow.python.keras.backend import reverse
 
 
 def mean_sd_bycolumn(data):
@@ -37,7 +38,7 @@ def split_data(X, y, test_percent=0.3, random_=None):
     return X_train, y_train, X_test, y_test
 
 
-def test_model_from_path(X, y, path, reg=None, mean_y = None, std_y = None, Time = None):
+def test_model_from_path(X, y, path, reg=None, mean_y = None, std_y = None, Time = None, picture_id = ""):
     '''
         Given X and y from the test set creates the confusion matrix from a model readed from path 
     '''
@@ -53,12 +54,15 @@ def test_model_from_path(X, y, path, reg=None, mean_y = None, std_y = None, Time
             plt.plot(Time, y, ".",label="real values", color="blue")
             plt.plot(Time, y_pred, ".", label="predicted values", color="red", alpha=0.2)
             plt.legend()
-            plt.savefig(path+"predictions.jpg")
+            plt.savefig(path+f"predictions {picture_id}.jpg")
             plt.close()
         except:
             pass
 
-        return mean_absolute_error(y, y_pred=y_pred)
+        mean = mean_absolute_error(y, y_pred=y_pred)
+        
+        y_pred = [x[0] for x in y_pred]
+        return mean, np.sqrt(sum((y-y_pred-np.full(len(y), mean))**2)/len(y)) 
         #print(list(zip(y, list(y_pred[:, 0]))))
     else:
         y_pred = model.predict_classes(X)

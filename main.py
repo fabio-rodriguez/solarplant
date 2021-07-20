@@ -274,11 +274,11 @@ def test_networks3():
     
     X  = read_NEW_DATA()
     path = "models/dnn_regression"
-    train_all_models(X, 0, path, "Irr", epochs_permodel= 700)
-    train_all_models(X, 1, path, "Flow", epochs_permodel= 700)
-    train_all_models(X, 2, path, "Tamb", epochs_permodel= 700)
-    train_all_models(X, 3, path, "Tin", epochs_permodel= 700)
-    train_all_models(X, 4, path, "Tout", epochs_permodel= 700)
+    #train_all_models(np.copy(X), 0, path, "Irr", epochs_permodel= 700)
+    train_all_models(np.copy(X), 1, path, "Flow", epochs_permodel= 700)
+    train_all_models(np.copy(X), 2, path, "Tamb", epochs_permodel= 700)
+    train_all_models(np.copy(X), 3, path, "Tin", epochs_permodel= 700)
+    train_all_models(np.copy(X), 4, path, "Tout", epochs_permodel= 700)
 
 
 def train_all_models(X, yindex, path, name, test_percent=0.3, epochs_permodel=600, n_splits=5, seed=2**11, batch_size=1000):
@@ -286,35 +286,35 @@ def train_all_models(X, yindex, path, name, test_percent=0.3, epochs_permodel=60
     name = name if name else yindex
     
     N = len(X)
-    mean_y = sum(X[:, 1])/len(X[:, yindex])
+    mean_y = sum(X[:, yindex])/len(X[:, yindex])
     std_y = statistics.pstdev(X[:, yindex])
 
     X = preprocessing.scale(X) 
     y = X[:, yindex]
 
     ##Flow From Three
-    print(f"***Shape[1] es {X.shape[1]}")
     for i in range(X.shape[1]):
 
         if i == yindex:
-            name = f"{name}-from-4"
+            methodName = f"{name}-from-4"
             Xs = np.delete(X, [yindex], 1)
-            inputNodes = X.shape[1] - 1 
+        #    inputNodes = X.shape[1] - 1 
         else:
-            name = f"{name}-from-3-removing({i})"
+            methodName = f"{name}-from-3-removing({i})"
             Xs = np.delete(X, [i, yindex], 1)
-            inputNodes = X.shape[1] - 2
+        #    inputNodes = X.shape[1] - 2
 
         X_train, y_train, X_test, y_test = split_data(Xs, y, test_percent=test_percent, random_=seed)
-        model, hist = k_fold_regression_NN(X_train, y_train, inputNodes, epochs_permodel=epochs_permodel, batch_size_permodel= batch_size, n_splits=n_splits, seed=seed, path=f"{path}/{name}/")
+        #model, hist = k_fold_regression_NN(X_train, y_train, inputNodes, epochs_permodel=epochs_permodel, batch_size_permodel= batch_size, n_splits=n_splits, seed=seed, path=f"{path}/{methodName}/")
 
-        plot_history(hist, path=f"{path}/{name}/", reg=1)
+        #plot_history(hist, path=f"{path}/{methodName}/", reg=1)
 
         with open("data.txt", "a+") as file:
-            error = test_model_from_path(X_test, y_test, f"{path}/{name}/", reg=1, mean_y=mean_y, std_y=std_y)
-            file.write(f"Validation Set Error {name}: {error} \n")
-            error = test_model_from_path(Xs, y, f"{path}/{name}/", reg=1, mean_y=mean_y, std_y=std_y, Time=list(range(N)))
-            file.write(f"Total Set Error {name}: {error} \n")
+            error, std = test_model_from_path(X_test, y_test, f"{path}/{methodName}/", reg=1, mean_y=mean_y, std_y=std_y)
+            file.write(f"Validation Set on {methodName}: square_mean_error {error}, standar_deviation {std} \n")
+            error, std = test_model_from_path(Xs, y, f"{path}/{methodName}/", reg=1, mean_y=mean_y, std_y=std_y, Time=list(range(N)))
+            file.write(f"Total Set on {methodName}: square_mean_error {error}, standar_deviation {std} \n")
+            file.write("\n")
 
 
 def check_trained_models():
