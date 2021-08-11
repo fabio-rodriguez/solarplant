@@ -2,6 +2,7 @@ import keras
 import numpy as np
 import statistics
 import tensorflow as tf
+import warnings
 
 #from keras.utils.vis_utils import plot_model
 import matplotlib.pyplot as plt
@@ -9,6 +10,7 @@ from sklearn.metrics import confusion_matrix, mean_absolute_error, mean_squared_
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import plot_model
 from tensorflow.python.keras.backend import reverse
+
 
 
 def mean_sd_bycolumn(data):
@@ -47,12 +49,12 @@ def test_model_from_path(X, y, path, reg=None, mean_y = None, std_y = None, Time
     if reg:
         y_pred = model.predict(X)
         if mean_y and std_y:
-            y = y*std_y+mean_y
+            y = [y*std_y+mean_y for yi in y]
             y_pred = y_pred*std_y+mean_y
 
         try: 
-            plt.plot(Time, y, ".",label="real values", color="blue")
-            plt.plot(Time, y_pred, ".", label="predicted values", color="red", alpha=0.2)
+            plt.plot(Time, y, label="real values", color="blue")
+            plt.plot(Time, y_pred, label="predicted values", color="red")
             plt.legend()
             plt.savefig(path+f"predictions {picture_id}.jpg")
             plt.close()
@@ -85,13 +87,13 @@ def plot_history(record, path="", reg=None):
     '''
 
     if reg:
-        plt.plot(record.history['mean_absolute_error'])
-        plt.plot(record.history['val_mean_absolute_error'])
+        plt.plot([x for i, x in enumerate(record.history['mean_absolute_error']) if i%10==0])
+        plt.plot([x for i, x in enumerate(record.history['val_mean_absolute_error']) if i%10==0])
         plt.title('model mean absolute error')
         plt.ylabel('mean absolute error')
     else:        
-        plt.plot(record.history['accuracy'])
-        plt.plot(record.history['val_accuracy'])
+        plt.plot([x for i, x in enumerate(record.history['accuracy']) if i%10==0])
+        plt.plot([x for i, x in enumerate(record.history['val_accuracy']) if i%10==0])
         plt.title('model accuracy')
         plt.ylabel('accuracy')
     
@@ -101,8 +103,8 @@ def plot_history(record, path="", reg=None):
     plt.savefig(path+"accuracy_hist.png")
     plt.close()
 
-    plt.plot(record.history['loss'])
-    plt.plot(record.history['val_loss'])
+    plt.plot([x for i, x in enumerate(record.history['loss']) if i%10==0])
+    plt.plot([x for i, x in enumerate(record.history['val_loss']) if i%10==0])
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')

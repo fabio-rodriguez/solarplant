@@ -5,7 +5,7 @@ import statistics
 
 from aux_functions import plot_history, mean_sd_bycolumn, print_confusion_matrix, save_model_info
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense, Dropout
 from keras.utils import np_utils
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.metrics import accuracy_score
@@ -143,11 +143,12 @@ def basic_regression_model(input_size):
     model = Sequential()
     model.add(Dense(40, input_dim=input_size, activation='relu'))
     model.add(Dense(40, activation='relu'))
+    #model.add(Dropout(0.25))
     model.add(Dense(40, activation='relu'))
     model.add(Dense(40, activation='relu'))
     model.add(Dense(20, activation='relu'))
     model.add(Dense(10, activation='relu'))
-    model.add(Dense(5, activation='relu'))
+    #model.add(Dense(5, activation='relu'))
     model.add(Dense(1, activation='linear'))
 
     return model
@@ -281,7 +282,7 @@ def k_fold_multiclass(X, y, create_model=basic_model, n_splits=4, seed=None, epo
     return results
 
 
-def k_fold_regression_NN(X_train, y_train, input_size, create_model=basic_regression_model, n_splits=5, seed=None, epochs_permodel=150, batch_size_permodel=10, path=None):
+def k_fold_regression_NN(X_train, y_train, input_size, create_model=basic_regression_model, n_splits=5, seed=None, epochs_permodel=1000, batch_size_permodel=100, path=None, earlyStoping=None, checkpoint=None):
     
     if seed:
         kfold = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
@@ -299,8 +300,19 @@ def k_fold_regression_NN(X_train, y_train, input_size, create_model=basic_regres
         model=create_model(input_size)
         model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mean_absolute_error'])
         
-        #record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=batch_size_permodel, verbose=0)
-        record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=1000) # verbose=0
+        if not earlyStoping and not checkpoint:
+            record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=1000) # verbose=0
+        else:
+            callbacks = []
+
+            if earlyStoping:
+                callbacks.append(earlyStoping)
+            
+            if checkpoint:
+                callbacks.append(checkpoint)
+            
+            record = model.fit(X, y, validation_data=(X_val,y_val), epochs=epochs_permodel, batch_size=batch_size_permodel, callbacks=callbacks, verbose=0)
+        
         models.append((record.history['val_mean_absolute_error'], model, record))
 
     models.sort()
