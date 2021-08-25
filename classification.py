@@ -141,13 +141,14 @@ def basic_model():
 def basic_regression_model(input_size):
 
     model = Sequential()
-    model.add(Dense(40, input_dim=input_size, activation='relu'))
-    model.add(Dense(40, activation='relu'))
+    model.add(Dense(10, input_dim=input_size, activation='relu'))
+    #model.add(Dense(40, input_dim=input_size, activation='relu'))
+    #model.add(Dense(40, activation='relu'))
     #model.add(Dropout(0.25))
-    model.add(Dense(40, activation='relu'))
-    model.add(Dense(40, activation='relu'))
-    model.add(Dense(20, activation='relu'))
-    model.add(Dense(10, activation='relu'))
+    #model.add(Dense(40, activation='relu'))
+    #model.add(Dense(40, activation='relu'))
+    #model.add(Dense(20, activation='relu'))
+    #model.add(Dense(10, activation='relu'))
     #model.add(Dense(5, activation='relu'))
     model.add(Dense(1, activation='linear'))
 
